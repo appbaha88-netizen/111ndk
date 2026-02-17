@@ -15,7 +15,7 @@
     <div id="login-overlay" class="login-overlay">
         <div class="login-box form-container animate__animated animate__fadeInDown">
             <h2 style="color: var(--primary-purple); margin-bottom: 20px;">تسجيل الدخول</h2>
-            <input type="password" id="login-pass" class="input-field" placeholder="أدخل رمز الدخول (1001)" style="text-align: center;">
+            <input type="password" id="login-pass" class="input-field" placeholder="أدخل رمز الدخول" style="text-align: center;">
             <button class="btn-primary" onclick="checkLogin()">تسجيل الدخول</button>
         </div>
     </div>
@@ -47,15 +47,8 @@
                     <h3 id="selected-service-title" class="mb-15" style="color: var(--primary-purple); text-align: center;"></h3>
 
                     <input type="text" placeholder="اسم الزبون" class="input-field">
-                    <input type="tel" placeholder="رقم هاتف الزبون" class="input-field">
                     
                     <input type="number" placeholder="العدد" class="input-field">
-                    
-                    <select class="input-field">
-                        <option value="pending">حالة الخدمة: قيد الانتظار</option>
-                        <option value="working">حالة الخدمة: قيد العمل</option>
-                        <option value="done">حالة الخدمة: تم الإنجاز</option>
-                    </select>
 
                     <input type="date" id="auto-date" class="input-field" readonly>
                     <button class="btn-primary" onclick="showNotification('تم حفظ الفاتورة بنجاح!'); showSellGrid();">حفظ الفاتورة</button>
@@ -74,7 +67,7 @@
                         <div class="invoice-card">
                             <div class="invoice-info">
                                 <h4>فاتورة #1001 - علي محمد</h4>
-                                <p>تاريخ: 16 فبراير 2026 | الحالة: قيد العمل</p>
+                                <p>تاريخ: 16 فبراير 2026</p>
                             </div>
                             <div class="invoice-actions">
                                 <button class="btn-icon edit" onclick="editInvoice()"><i class="fa-solid fa-pen"></i></button>
@@ -89,14 +82,7 @@
                     <h3 class="mb-15" style="color: var(--card-blue-icon); text-align: center;">تعديل الفاتورة #1001</h3>
 
                     <input type="text" placeholder="اسم الزبون" value="علي محمد" class="input-field">
-                    <input type="tel" placeholder="رقم هاتف الزبون" class="input-field">
                     <input type="number" placeholder="العدد" value="1" class="input-field">
-                    
-                    <select class="input-field">
-                        <option value="pending">حالة الخدمة: قيد الانتظار</option>
-                        <option value="working" selected>حالة الخدمة: قيد العمل</option>
-                        <option value="done">حالة الخدمة: تم الإنجاز</option>
-                    </select>
 
                     <input type="date" class="input-field" value="2026-02-16">
                     <button class="btn-primary" onclick="saveInvoiceEdit()">حفظ التعديلات</button>
