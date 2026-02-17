@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق الإدارة والتقارير</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-box form-container animate__animated animate__fadeInDown">
+            <h2 style="color: var(--primary-purple); margin-bottom: 20px;">تسجيل الدخول</h2>
+            <input type="password" id="login-pass" class="input-field" placeholder="أدخل رمز الدخول (1001)" style="text-align: center;">
+            <button class="btn-primary" onclick="checkLogin()">تسجيل الدخول</button>
+        </div>
+    </div>
+
+    <div id="app-wrapper" style="display: none;">
+        <main class="app-container">
+
+            <section id="services" class="tab-content">
+                <h2 class="section-title animate__animated animate__fadeInDown">إدارة الخدمات</h2>
+                <div class="form-container animate__animated animate__fadeInUp">
+                    <input type="text" id="service-name" placeholder="عنوان الخدمة" class="input-field">
+                    <input type="number" id="service-price" placeholder="السعر" class="input-field">
+                    <input type="file" id="service-image" class="input-field" accept="image/*">
+                    <button class="btn-primary" onclick="addService()">إضافة خدمة</button>
+                </div>
+                
+                <div id="services-list" class="services-grid mt-15 animate__animated animate__fadeInUp">
+                    </div>
+            </section>
+
+            <section id="sell" class="tab-content">
+                <h2 class="section-title animate__animated animate__fadeInDown">بيع خدمة</h2>
+                
+                <div id="sell-services-grid" class="services-grid animate__animated animate__fadeInUp">
+                    </div>
+
+                <div id="sell-form-container" class="form-container animate__animated animate__fadeInUp" style="display: none;">
+                    <button class="btn-icon mb-15 back-btn" onclick="showSellGrid()"><i class="fa-solid fa-arrow-right"></i> رجوع للخدمات</button>
+                    <h3 id="selected-service-title" class="mb-15" style="color: var(--primary-purple); text-align: center;"></h3>
+
+                    <input type="text" placeholder="اسم الزبون" class="input-field">
+                    <input type="tel" placeholder="رقم هاتف الزبون" class="input-field">
+                    
+                    <input type="number" placeholder="العدد" class="input-field">
+                    
+                    <select class="input-field">
+                        <option value="pending">حالة الخدمة: قيد الانتظار</option>
+                        <option value="working">حالة الخدمة: قيد العمل</option>
+                        <option value="done">حالة الخدمة: تم الإنجاز</option>
+                    </select>
+
+                    <input type="date" id="auto-date" class="input-field" readonly>
+                    <button class="btn-primary" onclick="showNotification('تم حفظ الفاتورة بنجاح!'); showSellGrid();">حفظ الفاتورة</button>
+                </div>
+            </section>
+
+            <section id="invoices" class="tab-content">
+                <h2 class="section-title animate__animated animate__fadeInDown">سجل الفواتير</h2>
+                
+                <div id="invoice-list-container">
+                    <div class="search-box animate__animated animate__fadeInUp">
+                        <input type="text" placeholder="بحث باسم الزبون أو رقم الفاتورة..." class="input-field search-input">
+                    </div>
+
+                    <div class="list-container animate__animated animate__fadeInUp mt-15">
+                        <div class="invoice-card">
+                            <div class="invoice-info">
+                                <h4>فاتورة #1001 - علي محمد</h4>
+                                <p>تاريخ: 16 فبراير 2026 | الحالة: قيد العمل</p>
+                            </div>
+                            <div class="invoice-actions">
+                                <button class="btn-icon edit" onclick="editInvoice()"><i class="fa-solid fa-pen"></i></button>
+                                <button class="btn-icon delete" onclick="deleteInvoice(this)"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="edit-invoice-container" class="form-container animate__animated animate__fadeInUp" style="display: none;">
+                    <button class="btn-icon mb-15 back-btn" onclick="cancelEditInvoice()"><i class="fa-solid fa-arrow-right"></i> إلغاء التعديل</button>
+                    <h3 class="mb-15" style="color: var(--card-blue-icon); text-align: center;">تعديل الفاتورة #1001</h3>
+
+                    <input type="text" placeholder="اسم الزبون" value="علي محمد" class="input-field">
+                    <input type="tel" placeholder="رقم هاتف الزبون" class="input-field">
+                    <input type="number" placeholder="العدد" value="1" class="input-field">
+                    
+                    <select class="input-field">
+                        <option value="pending">حالة الخدمة: قيد الانتظار</option>
+                        <option value="working" selected>حالة الخدمة: قيد العمل</option>
+                        <option value="done">حالة الخدمة: تم الإنجاز</option>
+                    </select>
+
+                    <input type="date" class="input-field" value="2026-02-16">
+                    <button class="btn-primary" onclick="saveInvoiceEdit()">حفظ التعديلات</button>
+                </div>
+            </section>
+
+            <section id="bonds" class="tab-content">
+                <h2 class="section-title animate__animated animate__fadeInDown">السندات المالية</h2>
+                <div class="bonds-container animate__animated animate__fadeInUp">
+                    <div class="bond-card receipt">
+                        <h3>سند قبض</h3>
+                        <input type="number" placeholder="مبلغ القبض" class="input-field">
+                        <button class="btn-primary success" onclick="showNotification('تم إضافة سند القبض!')">إضافة قبض</button>
+                    </div>
+                    <div class="bond-card payment">
+                        <h3>سند صرف</h3>
+                        <input type="text" placeholder="اسم الشخص" class="input-field">
+                        <input type="number" placeholder="مبلغ الصرف" class="input-field">
+                        <button class="btn-primary danger" onclick="showNotification('تم إضافة سند الصرف!')">إضافة صرف</button>
+                    </div>
+                </div>
+            </section>
+
+            <section id="reports" class="tab-content active">
+                <div class="reports-header animate__animated animate__fadeInDown">
+                    <i class="fa-solid fa-arrow-right"></i>
+                    <h2>الإحصائيات والتقارير</h2>
+                </div>
+
+                <div class="sub-nav animate__animated animate__fadeIn">
+                    <span class="active">نظرة عامة</span>
+                    <span>المواد</span>
+                    <span>المطابقة اليومية</span>
+                </div>
+
+                <div class="date-filters animate__animated animate__fadeInUp animate__delay-1s">
+                    <div class="date-box">
+                        <span>من تاريخ</span>
+                        <input type="date" class="input-field date-picker" id="fromDate">
+                    </div>
+                    <div class="date-box">
+                        <span>إلى تاريخ</span>
+                        <input type="date" class="input-field date-picker" id="toDate">
+                    </div>
+                </div>
+
+                <div class="stats-grid animate__animated animate__fadeInUp animate__delay-1s">
+                    <div class="stat-card blue">
+                        <div class="icon-box"><i class="fa-solid fa-wallet"></i></div>
+                        <p>رصيد الصندوق</p>
+                        <h3 class="total-sales">0 د.ع</h3>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="icon-box"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                        <p>صافي الربح</p>
+                        <h3 class="net-profit">0 د.ع</h3>
+                    </div>
+                </div>
+
+                <div class="comprehensive-summary animate__animated animate__fadeInUp animate__delay-2s">
+                    <div class="summary-header">
+                        <i class="fa-solid fa-clipboard-list"></i>
+                        <h3>الملخص الشامل</h3>
+                    </div>
+
+                    <div class="summary-section">
+                        <div class="section-title-sm">
+                            <i class="fa-solid fa-building-columns"></i> النتائج المالية
+                        </div>
+                        <div class="summary-row">
+                            <span>رصيد الصندوق</span>
+                            <span class="val blue-text">0 د.ع</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>صافي الربح</span>
+                            <span class="val green-text">0 د.ع</span>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="summary-section">
+                        <div class="section-title-sm">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> الفواتير
+                        </div>
+                        <div class="summary-row">
+                            <span>عدد الفواتير</span>
+                            <span class="val">0</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>إجمالي المبيعات</span>
+                            <span class="val blue-text">0 د.ع</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>المدفوع</span>
+                            <span class="val green-text">0 د.ع</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>المتبقي</span>
+                            <span class="val orange-text">0 د.ع</span>
+                        </div>
+                    </div>
+                    
+                    <button class="btn-primary success mt-15" onclick="exportExcel()">
+                        <i class="fa-solid fa-file-excel"></i> تصدير إلى Excel
+                    </button>
+                </div>
+            </section>
+
+            <section id="settings" class="tab-content">
+                <h2 class="section-title animate__animated animate__fadeInDown">الإعدادات والنسخ الاحتياطي</h2>
+                <div class="form-container animate__animated animate__fadeInUp">
+                    <button class="btn-primary" onclick="backupData()">
+                        <i class="fa-solid fa-download"></i> تحميل نسخة احتياطية (Backup)
+                    </button>
+                    <button class="btn-primary danger mt-15" onclick="restoreData()">
+                        <i class="fa-solid fa-upload"></i> استعادة نسخة احتياطية (Restore)
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-item" onclick="switchTab('services', this)">
+                <i class="fa-solid fa-box"></i>
+                <span>الخدمات</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('sell', this)">
+                <i class="fa-solid fa-cart-shopping"></i>
+                <span>بيع</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('invoices', this)">
+                <i class="fa-solid fa-receipt"></i>
+                <span>الفواتير</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('bonds', this)">
+                <i class="fa-solid fa-money-bill-transfer"></i>
+                <span>السندات</span>
+            </button>
+            <button class="nav-item active" onclick="switchTab('reports', this)">
+                <i class="fa-solid fa-chart-pie"></i>
+                <span>التقارير</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('settings', this)">
+                <i class="fa-solid fa-gear"></i>
+                <span>الإعدادات</span>
+            </button>
+        </nav>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker is registered successfully.', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('Service Worker registration failed:', err);
+                    });
+            });
+        }
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
