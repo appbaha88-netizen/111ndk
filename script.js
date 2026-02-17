@@ -253,8 +253,8 @@ function showNotification(message) {
 // دالة تصدير ملف الإكسل (CSV)
 function exportExcel() {
     let csvContent = "\uFEFF"; 
-    csvContent += "رقم الفاتورة,اسم الزبون,التاريخ,الحالة,المبلغ\n";
-    csvContent += "1001,علي محمد,16 فبراير 2026,قيد العمل,0\n";
+    csvContent += "رقم الفاتورة,اسم الزبون,التاريخ,المبلغ\n";
+    csvContent += "1001,علي محمد,16 فبراير 2026,0\n";
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
