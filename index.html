@@ -46,12 +46,12 @@
                     <button class="btn-icon mb-15 back-btn" onclick="showSellGrid()"><i class="fa-solid fa-arrow-right"></i> رجوع للخدمات</button>
                     <h3 id="selected-service-title" class="mb-15" style="color: var(--primary-purple); text-align: center;"></h3>
 
-                    <input type="text" placeholder="اسم الزبون" class="input-field">
+                    <input type="text" id="sell-customer" placeholder="اسم الزبون" class="input-field">
                     
-                    <input type="number" placeholder="العدد" class="input-field">
+                    <input type="number" id="sell-qty" placeholder="العدد" class="input-field">
 
                     <input type="date" id="auto-date" class="input-field" readonly>
-                    <button class="btn-primary" onclick="showNotification('تم حفظ الفاتورة بنجاح!'); showSellGrid();">حفظ الفاتورة</button>
+                    <button class="btn-primary" onclick="saveInvoice()">حفظ الفاتورة</button>
                 </div>
             </section>
 
@@ -94,14 +94,14 @@
                 <div class="bonds-container animate__animated animate__fadeInUp">
                     <div class="bond-card receipt">
                         <h3>سند قبض</h3>
-                        <input type="number" placeholder="مبلغ القبض" class="input-field">
-                        <button class="btn-primary success" onclick="showNotification('تم إضافة سند القبض!')">إضافة قبض</button>
+                        <input type="number" id="receipt-amount" placeholder="مبلغ القبض" class="input-field">
+                        <button class="btn-primary success" onclick="addReceipt()">إضافة قبض</button>
                     </div>
                     <div class="bond-card payment">
                         <h3>سند صرف</h3>
-                        <input type="text" placeholder="اسم الشخص" class="input-field">
-                        <input type="number" placeholder="مبلغ الصرف" class="input-field">
-                        <button class="btn-primary danger" onclick="showNotification('تم إضافة سند الصرف!')">إضافة صرف</button>
+                        <input type="text" id="payment-name" placeholder="اسم الشخص" class="input-field">
+                        <input type="number" id="payment-amount" placeholder="مبلغ الصرف" class="input-field">
+                        <button class="btn-primary danger" onclick="addPayment()">إضافة صرف</button>
                     </div>
                 </div>
             </section>
@@ -113,9 +113,9 @@
                 </div>
 
                 <div class="sub-nav animate__animated animate__fadeIn">
-                    <span class="active">نظرة عامة</span>
-                    <span>المواد</span>
-                    <span>المطابقة اليومية</span>
+                    <span class="active" onclick="switchReportTab('overview', this)" style="cursor: pointer;">نظرة عامة</span>
+                    <span onclick="switchReportTab('materials', this)" style="cursor: pointer;">المواد</span>
+                    <span onclick="switchReportTab('matching', this)" style="cursor: pointer;">المطابقة اليومية</span>
                 </div>
 
                 <div class="date-filters animate__animated animate__fadeInUp animate__delay-1s">
@@ -129,67 +129,88 @@
                     </div>
                 </div>
 
-                <div class="stats-grid animate__animated animate__fadeInUp animate__delay-1s">
-                    <div class="stat-card blue">
-                        <div class="icon-box"><i class="fa-solid fa-wallet"></i></div>
-                        <p>رصيد الصندوق</p>
-                        <h3 class="total-sales">0 د.ع</h3>
+                <div id="report-overview">
+                    <div class="stats-grid animate__animated animate__fadeInUp animate__delay-1s">
+                        <div class="stat-card blue">
+                            <div class="icon-box"><i class="fa-solid fa-wallet"></i></div>
+                            <p>رصيد الصندوق</p>
+                            <h3 class="total-sales" id="rep-box-top">0 د.ع</h3>
+                        </div>
+                        <div class="stat-card green">
+                            <div class="icon-box"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                            <p>صافي الربح</p>
+                            <h3 class="net-profit" id="rep-profit-top">0 د.ع</h3>
+                        </div>
                     </div>
-                    <div class="stat-card green">
-                        <div class="icon-box"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                        <p>صافي الربح</p>
-                        <h3 class="net-profit">0 د.ع</h3>
+
+                    <div class="comprehensive-summary animate__animated animate__fadeInUp animate__delay-2s">
+                        <div class="summary-header">
+                            <i class="fa-solid fa-clipboard-list"></i>
+                            <h3>الملخص الشامل</h3>
+                        </div>
+
+                        <div class="summary-section">
+                            <div class="section-title-sm">
+                                <i class="fa-solid fa-building-columns"></i> النتائج المالية
+                            </div>
+                            <div class="summary-row">
+                                <span>رصيد الصندوق</span>
+                                <span class="val blue-text" id="rep-box-balance">0 د.ع</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>صافي الربح</span>
+                                <span class="val green-text" id="rep-net-profit">0 د.ع</span>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="summary-section">
+                            <div class="section-title-sm">
+                                <i class="fa-solid fa-file-invoice-dollar"></i> الفواتير
+                            </div>
+                            <div class="summary-row">
+                                <span>عدد الفواتير</span>
+                                <span class="val" id="rep-invoice-count">0</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>إجمالي المبيعات</span>
+                                <span class="val blue-text" id="rep-total-sales">0 د.ع</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>المدفوع</span>
+                                <span class="val green-text" id="rep-paid">0 د.ع</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>المتبقي</span>
+                                <span class="val orange-text">0 د.ع</span>
+                            </div>
+                        </div>
+                        
+                        <button class="btn-primary success mt-15" onclick="exportExcel()">
+                            <i class="fa-solid fa-file-excel"></i> تصدير إلى Excel
+                        </button>
                     </div>
                 </div>
 
-                <div class="comprehensive-summary animate__animated animate__fadeInUp animate__delay-2s">
+                <div id="report-materials" style="display: none;" class="comprehensive-summary animate__animated animate__fadeInUp">
                     <div class="summary-header">
-                        <i class="fa-solid fa-clipboard-list"></i>
-                        <h3>الملخص الشامل</h3>
+                        <i class="fa-solid fa-box"></i>
+                        <h3>إحصائيات المواد والخدمات</h3>
                     </div>
-
-                    <div class="summary-section">
-                        <div class="section-title-sm">
-                            <i class="fa-solid fa-building-columns"></i> النتائج المالية
+                    <div id="materials-report-list" class="list-container mt-15">
                         </div>
-                        <div class="summary-row">
-                            <span>رصيد الصندوق</span>
-                            <span class="val blue-text">0 د.ع</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>صافي الربح</span>
-                            <span class="val green-text">0 د.ع</span>
-                        </div>
-                    </div>
-
-                    <hr>
-
-                    <div class="summary-section">
-                        <div class="section-title-sm">
-                            <i class="fa-solid fa-file-invoice-dollar"></i> الفواتير
-                        </div>
-                        <div class="summary-row">
-                            <span>عدد الفواتير</span>
-                            <span class="val">0</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>إجمالي المبيعات</span>
-                            <span class="val blue-text">0 د.ع</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>المدفوع</span>
-                            <span class="val green-text">0 د.ع</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>المتبقي</span>
-                            <span class="val orange-text">0 د.ع</span>
-                        </div>
-                    </div>
-                    
-                    <button class="btn-primary success mt-15" onclick="exportExcel()">
-                        <i class="fa-solid fa-file-excel"></i> تصدير إلى Excel
-                    </button>
                 </div>
+
+                <div id="report-matching" style="display: none;" class="comprehensive-summary animate__animated animate__fadeInUp">
+                    <div class="summary-header">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <h3>المطابقة اليومية</h3>
+                    </div>
+                    <div id="matching-report-list" class="list-container mt-15">
+                        </div>
+                </div>
+
             </section>
 
             <section id="settings" class="tab-content">
