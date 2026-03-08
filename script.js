@@ -10,6 +10,28 @@ let receiptsData = [];
 let paymentsData = [];
 let currentSelectedServiceIndex = null;
 
+// دوال الحفظ والاسترجاع لحفظ البيانات في الجهاز
+function loadAllDataFromStorage() {
+    const storedServices = localStorage.getItem('app_servicesData');
+    if (storedServices) servicesData = JSON.parse(storedServices);
+
+    const storedInvoices = localStorage.getItem('app_invoicesData');
+    if (storedInvoices) invoicesData = JSON.parse(storedInvoices);
+
+    const storedReceipts = localStorage.getItem('app_receiptsData');
+    if (storedReceipts) receiptsData = JSON.parse(storedReceipts);
+
+    const storedPayments = localStorage.getItem('app_paymentsData');
+    if (storedPayments) paymentsData = JSON.parse(storedPayments);
+}
+
+function saveAllDataToStorage() {
+    localStorage.setItem('app_servicesData', JSON.stringify(servicesData));
+    localStorage.setItem('app_invoicesData', JSON.stringify(invoicesData));
+    localStorage.setItem('app_receiptsData', JSON.stringify(receiptsData));
+    localStorage.setItem('app_paymentsData', JSON.stringify(paymentsData));
+}
+
 // دالة التحقق من رمز الدخول (1001)
 function checkLogin() {
     const pass = document.getElementById('login-pass').value;
@@ -81,7 +103,6 @@ function switchReportTab(tabId, clickedSpan) {
     updateReports(); // تحديث الأرقام والبيانات عند التبديل
 }
 
-
 // دالة إضافة خدمة جديدة
 function addService() {
     const name = document.getElementById('service-name').value;
@@ -98,6 +119,8 @@ function addService() {
         const newService = { name, price, img: imgSrc };
         servicesData.push(newService);
         
+        saveAllDataToStorage();
+
         document.getElementById('service-name').value = '';
         document.getElementById('service-price').value = '';
         document.getElementById('service-image').value = '';
@@ -162,6 +185,7 @@ function deleteService(index, event) {
     }).then((result) => {
         if (result.isConfirmed) {
             servicesData.splice(index, 1);
+            saveAllDataToStorage();
             renderServices();
             showNotification('تم حذف الخدمة بنجاح!');
         }
@@ -204,6 +228,8 @@ function saveInvoice() {
             date: date
         });
 
+        saveAllDataToStorage();
+
         document.getElementById('sell-customer').value = '';
         document.getElementById('sell-qty').value = '';
 
@@ -230,6 +256,9 @@ function addReceipt() {
             amount: parseInt(amount), 
             date: document.getElementById('auto-date').value 
         });
+        
+        saveAllDataToStorage();
+
         document.getElementById('receipt-amount').value = '';
         showNotification('تم إضافة سند القبض!');
         updateReports(); // تحديث التقارير
@@ -247,6 +276,9 @@ function addPayment() {
             amount: parseInt(amount), 
             date: document.getElementById('auto-date').value 
         });
+        
+        saveAllDataToStorage();
+
         document.getElementById('payment-name').value = '';
         document.getElementById('payment-amount').value = '';
         showNotification('تم إضافة سند الصرف!');
@@ -370,6 +402,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('app-wrapper').style.display = 'block';
     }
+
+    loadAllDataFromStorage();
 
     renderServices();
 
