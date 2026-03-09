@@ -1,13 +1,19 @@
 {
-  "name": "تطبيق الإدارة والتقارير",
-  "short_name": "إدارة",
-  "start_url": "index.html",
+  "name": "نظام الإدارة والتقارير",
+  "short_name": "الإدارة",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#fafbfe",
+  "background_color": "#ffffff",
   "theme_color": "#6b46c1",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3204/3204052.png",
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
