@@ -28,7 +28,11 @@ window.loginWithGoogle = function() {
     signInWithRedirect(auth, provider);
 };
 
-getRedirectResult(auth).catch((error) => {
+getRedirectResult(auth).then((result) => {
+    if (result) {
+        showApp();
+    }
+}).catch((error) => {
     Swal.fire({text: 'فشل تسجيل الدخول: ' + error.message, icon: 'error', toast: true, position: 'top-end'});
 });
 
