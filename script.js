@@ -1,78 +1,149 @@
-// مصفوفة لتخزين الخدمات مع إضافة خدمات افتراضية وصور
+// script.js
+import { db, auth, collection, getDocs, doc, setDoc, signInWithPhoneNumber, RecaptchaVerifier, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from './firebase.js';
+
 let servicesData = [
     { name: 'تصميم شعار', price: '25000', img: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80' },
     { name: 'برمجة موقع', price: '150000', img: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80' }
 ];
 
-// مصفوفات لتخزين الفواتير والسندات لربطها بالتقارير
 let invoicesData = [];
 let receiptsData = [];
 let paymentsData = [];
 let currentSelectedServiceIndex = null;
+let confirmationResult = null;
 
-// دوال الحفظ والاسترجاع لحفظ البيانات في الجهاز
-function loadAllDataFromStorage() {
-    const storedServices = localStorage.getItem('app_servicesData');
-    if (storedServices) servicesData = JSON.parse(storedServices);
+auth.languageCode = 'ar';
 
-    const storedInvoices = localStorage.getItem('app_invoicesData');
-    if (storedInvoices) invoicesData = JSON.parse(storedInvoices);
-
-    const storedReceipts = localStorage.getItem('app_receiptsData');
-    if (storedReceipts) receiptsData = JSON.parse(storedReceipts);
-
-    const storedPayments = localStorage.getItem('app_paymentsData');
-    if (storedPayments) paymentsData = JSON.parse(storedPayments);
-}
-
-function saveAllDataToStorage() {
-    localStorage.setItem('app_servicesData', JSON.stringify(servicesData));
-    localStorage.setItem('app_invoicesData', JSON.stringify(invoicesData));
-    localStorage.setItem('app_receiptsData', JSON.stringify(receiptsData));
-    localStorage.setItem('app_paymentsData', JSON.stringify(paymentsData));
-}
-
-// دالة التحقق من رمز الدخول (1001)
-window.checkLogin = function() {
-    const pass = document.getElementById('login-pass').value;
-    if (pass === '1001') {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('app-wrapper').style.display = 'block';
-        // حفظ حالة الدخول لكي لا يطلب الرمز عند تحديث الصفحة
-        localStorage.setItem('isLoggedIn', 'true');
-    } else {
-        Swal.fire({
-            text: 'رمز الدخول غير صحيح!',
-            icon: 'error',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
+window.setupRecaptcha = function() {
+    if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible'
         });
     }
+};
+
+window.loginWithGoogle = async function() {
+    const provider = new GoogleAuthProvider();
+    try {
+        await signInWithPopup(auth, provider);
+        localStorage.setItem('loginMethod', 'google');
+        showApp();
+    } catch (error) {
+        Swal.fire({text: 'فشل تسجيل الدخول: ' + error.message, icon: 'error', toast: true, position: 'top-end'});
+    }
+};
+
+window.sendPhoneCode = async function() {
+    const phone = document.getElementById('phone-number').value;
+    if (!phone) return;
+    window.setupRecaptcha();
+    const appVerifier = window.recaptchaVerifier;
+    try {
+        confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+        document.getElementById('verification-section').style.display = 'block';
+        Swal.fire({text: 'تم إرسال الكود بنجاح', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
+    } catch (error) {
+        Swal.fire({text: 'حدث خطأ: ' + error.message, icon: 'error', toast: true, position: 'top-end'});
+    }
+};
+
+window.verifyPhoneCode = async function() {
+    const code = document.getElementById('verification-code').value;
+    if (!code) return;
+    try {
+        await confirmationResult.confirm(code);
+        localStorage.setItem('loginMethod', 'phone');
+        showApp();
+    } catch (error) {
+        Swal.fire({text: 'الكود غير صحيح', icon: 'error', toast: true, position: 'top-end'});
+    }
+};
+
+function showApp() {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app-wrapper').style.display = 'block';
+    window.loadAllDataFromFirestore();
 }
 
-// دالة التنقل بين التبويبات الرئيسية
-function switchTab(tabId, clickedButton) {
-    const tabs = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => {
-        tab.classList.remove('active');
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        showApp();
+    }
+});
+
+window.loadAllDataFromFirestore = async function() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "appData"));
+        querySnapshot.forEach((document) => {
+            const data = document.data();
+            if(document.id === "mainData") {
+                if(data.servicesData) servicesData = data.servicesData;
+                if(data.invoicesData) invoicesData = data.invoicesData;
+                if(data.receiptsData) receiptsData = data.receiptsData;
+                if(data.paymentsData) paymentsData = data.paymentsData;
+            }
+        });
+        window.renderServices();
+        window.updateReports();
+    } catch(e) {
+        console.error(e);
+    }
+};
+
+window.saveAllDataToFirestore = async function() {
+    try {
+        await setDoc(doc(db, "appData", "mainData"), {
+            servicesData, invoicesData, receiptsData, paymentsData
+        });
+    } catch(e) {
+        console.error(e);
+    }
+};
+
+function compressImage(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = event => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 800;
+                const MAX_HEIGHT = 800;
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                } else {
+                    if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.6));
+            };
+        };
     });
+}
+
+window.switchTab = function(tabId, clickedButton) {
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => tab.classList.remove('active'));
 
     const navItems = document.querySelectorAll('.nav-item');
-    navItems.forEach(btn => {
-        btn.classList.remove('active');
-    });
+    navItems.forEach(btn => btn.classList.remove('active'));
 
     const activeTab = document.getElementById(tabId);
     if(activeTab) {
         activeTab.classList.add('active');
-        
         const animatedElements = activeTab.querySelectorAll('.animate__animated');
         animatedElements.forEach(el => {
             el.classList.remove('animate__fadeInUp', 'animate__fadeInDown', 'animate__fadeIn');
             void el.offsetWidth; 
-            
             if(el.classList.contains('section-title') || el.classList.contains('reports-header')) {
                 el.classList.add('animate__fadeInDown');
             } else if (el.classList.contains('sub-nav')) {
@@ -82,14 +153,10 @@ function switchTab(tabId, clickedButton) {
             }
         });
     }
+    if(clickedButton) clickedButton.classList.add('active');
+};
 
-    if(clickedButton) {
-        clickedButton.classList.add('active');
-    }
-}
-
-// دالة التنقل بين التبويبات الفرعية في التقارير
-function switchReportTab(tabId, clickedSpan) {
+window.switchReportTab = function(tabId, clickedSpan) {
     const spans = clickedSpan.parentElement.querySelectorAll('span');
     spans.forEach(s => s.classList.remove('active'));
     clickedSpan.classList.add('active');
@@ -99,12 +166,10 @@ function switchReportTab(tabId, clickedSpan) {
     document.getElementById('report-matching').style.display = 'none';
 
     document.getElementById('report-' + tabId).style.display = 'block';
-    
-    updateReports(); // تحديث الأرقام والبيانات عند التبديل
-}
+    window.updateReports(); 
+};
 
-// دالة إضافة خدمة جديدة
-function addService() {
+window.addService = async function() {
     const name = document.getElementById('service-name').value;
     const price = document.getElementById('service-price').value;
     const imgInput = document.getElementById('service-image');
@@ -112,35 +177,27 @@ function addService() {
     let imgSrc = 'https://via.placeholder.com/150?text=بدون+صورة'; 
     
     if(imgInput.files && imgInput.files[0]) {
-        imgSrc = URL.createObjectURL(imgInput.files[0]);
+        imgSrc = await compressImage(imgInput.files[0]);
     }
 
     if(name && price) {
         const newService = { name, price, img: imgSrc };
         servicesData.push(newService);
         
-        saveAllDataToStorage();
+        window.saveAllDataToFirestore();
 
         document.getElementById('service-name').value = '';
         document.getElementById('service-price').value = '';
         document.getElementById('service-image').value = '';
 
-        renderServices();
-        showNotification('تم إضافة الخدمة بنجاح!');
+        window.renderServices();
+        window.showNotification('تم إضافة الخدمة بنجاح!');
     } else {
-        Swal.fire({
-            text: 'يرجى إدخال عنوان الخدمة والسعر',
-            icon: 'error',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
+        Swal.fire({ text: 'يرجى إدخال عنوان الخدمة والسعر', icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
     }
-}
+};
 
-// دالة رسم وتحديث البطاقات
-function renderServices() {
+window.renderServices = function() {
     const servicesList = document.getElementById('services-list');
     const sellGrid = document.getElementById('sell-services-grid');
     
@@ -168,10 +225,9 @@ function renderServices() {
 
     if(servicesList) servicesList.innerHTML = htmlServices;
     if(sellGrid) sellGrid.innerHTML = htmlSell;
-}
+};
 
-// دالة حذف الخدمة
-function deleteService(index, event) {
+window.deleteService = function(index, event) {
     event.stopPropagation();
     Swal.fire({
         title: 'هل أنت متأكد؟',
@@ -185,32 +241,28 @@ function deleteService(index, event) {
     }).then((result) => {
         if (result.isConfirmed) {
             servicesData.splice(index, 1);
-            saveAllDataToStorage();
-            renderServices();
-            showNotification('تم حذف الخدمة بنجاح!');
+            window.saveAllDataToFirestore();
+            window.renderServices();
+            window.showNotification('تم حذف الخدمة بنجاح!');
         }
     });
-}
+};
 
-// دالة اختيار الخدمة للبيع
-function selectServiceToSell(index) {
+window.selectServiceToSell = function(index) {
     currentSelectedServiceIndex = index;
     const srv = servicesData[index];
     document.getElementById('sell-services-grid').style.display = 'none';
     document.getElementById('sell-form-container').style.display = 'block';
-    
     document.getElementById('selected-service-title').innerText = `بيع: ${srv.name} (${srv.price} د.ع)`;
-}
+};
 
-// دالة الرجوع من حقول البيع إلى شبكة الخدمات
-function showSellGrid() {
+window.showSellGrid = function() {
     document.getElementById('sell-services-grid').style.display = 'grid';
     document.getElementById('sell-form-container').style.display = 'none';
     currentSelectedServiceIndex = null;
-}
+};
 
-// دالة حفظ الفاتورة (البيع) وربطها بالتقارير
-function saveInvoice() {
+window.saveInvoice = function() {
     const customer = document.getElementById('sell-customer').value;
     const qty = document.getElementById('sell-qty').value;
     const date = document.getElementById('auto-date').value;
@@ -228,83 +280,55 @@ function saveInvoice() {
             date: date
         });
 
-        saveAllDataToStorage();
+        window.saveAllDataToFirestore();
 
         document.getElementById('sell-customer').value = '';
         document.getElementById('sell-qty').value = '';
 
-        showNotification('تم حفظ الفاتورة بنجاح!');
-        showSellGrid();
-        updateReports(); // تحديث التقارير فوراً
+        window.showNotification('تم حفظ الفاتورة بنجاح!');
+        window.showSellGrid();
+        window.updateReports(); 
     } else {
-        Swal.fire({
-            text: 'يرجى إدخال اسم الزبون والعدد',
-            icon: 'error',
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
+        Swal.fire({ text: 'يرجى إدخال اسم الزبون والعدد', icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
     }
-}
+};
 
-// دوال إضافة السندات وربطها بالتقارير
-function addReceipt() {
+window.addReceipt = function() {
     const amount = document.getElementById('receipt-amount').value;
     if(amount) {
-        receiptsData.push({ 
-            amount: parseInt(amount), 
-            date: document.getElementById('auto-date').value 
-        });
-        
-        saveAllDataToStorage();
-
+        receiptsData.push({ amount: parseInt(amount), date: document.getElementById('auto-date').value });
+        window.saveAllDataToFirestore();
         document.getElementById('receipt-amount').value = '';
-        showNotification('تم إضافة سند القبض!');
-        updateReports(); // تحديث التقارير
+        window.showNotification('تم إضافة سند القبض!');
+        window.updateReports(); 
     } else {
         Swal.fire({ text: 'يرجى إدخال المبلغ', icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
     }
-}
+};
 
-function addPayment() {
+window.addPayment = function() {
     const name = document.getElementById('payment-name').value;
     const amount = document.getElementById('payment-amount').value;
     if(name && amount) {
-        paymentsData.push({ 
-            name: name, 
-            amount: parseInt(amount), 
-            date: document.getElementById('auto-date').value 
-        });
-        
-        saveAllDataToStorage();
-
+        paymentsData.push({ name: name, amount: parseInt(amount), date: document.getElementById('auto-date').value });
+        window.saveAllDataToFirestore();
         document.getElementById('payment-name').value = '';
         document.getElementById('payment-amount').value = '';
-        showNotification('تم إضافة سند الصرف!');
-        updateReports(); // تحديث التقارير
+        window.showNotification('تم إضافة سند الصرف!');
+        window.updateReports(); 
     } else {
         Swal.fire({ text: 'يرجى إدخال الاسم والمبلغ', icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
     }
-}
+};
 
-// دالة حساب وتحديث كافة التقارير (رصيد الصندوق، الأرباح، المواد، المطابقة)
-function updateReports() {
-    let totalSales = 0;
-    invoicesData.forEach(inv => totalSales += inv.total);
+window.updateReports = function() {
+    let totalSales = 0; invoicesData.forEach(inv => totalSales += inv.total);
+    let totalReceipts = 0; receiptsData.forEach(rec => totalReceipts += rec.amount);
+    let totalPayments = 0; paymentsData.forEach(pay => totalPayments += pay.amount);
 
-    let totalReceipts = 0;
-    receiptsData.forEach(rec => totalReceipts += rec.amount);
-
-    let totalPayments = 0;
-    paymentsData.forEach(pay => totalPayments += pay.amount);
-
-    // الحسابات: رصيد الصندوق = (مبيعات الفواتير + سندات القبض) - سندات الصرف
-    // صافي الربح = المبيعات - المصروفات (سندات الصرف)
     let boxBalance = (totalSales + totalReceipts) - totalPayments;
     let netProfit = totalSales - totalPayments;
 
-    // تحديث الواجهة (نظرة عامة)
     if(document.getElementById('rep-box-top')) document.getElementById('rep-box-top').innerText = boxBalance.toLocaleString() + ' د.ع';
     if(document.getElementById('rep-profit-top')) document.getElementById('rep-profit-top').innerText = netProfit.toLocaleString() + ' د.ع';
     
@@ -315,16 +339,11 @@ function updateReports() {
     if(document.getElementById('rep-total-sales')) document.getElementById('rep-total-sales').innerText = totalSales.toLocaleString() + ' د.ع';
     if(document.getElementById('rep-paid')) document.getElementById('rep-paid').innerText = totalSales.toLocaleString() + ' د.ع';
 
-    // تحديث الواجهة (المواد)
     let materialsHtml = '';
     servicesData.forEach(srv => {
-        let srvQty = 0;
-        let srvTotal = 0;
+        let srvQty = 0; let srvTotal = 0;
         invoicesData.forEach(inv => {
-            if(inv.serviceName === srv.name) {
-                srvQty += parseInt(inv.qty);
-                srvTotal += inv.total;
-            }
+            if(inv.serviceName === srv.name) { srvQty += parseInt(inv.qty); srvTotal += inv.total; }
         });
         materialsHtml += `
             <div class="summary-section mb-15" style="background:#f9fafb; padding:10px; border-radius:10px;">
@@ -337,40 +356,31 @@ function updateReports() {
     const matContainer = document.getElementById('materials-report-list');
     if(matContainer) matContainer.innerHTML = materialsHtml || '<p style="text-align:center;">لا توجد بيانات</p>';
 
-    // تحديث الواجهة (المطابقة اليومية)
     let matchingHtml = '';
-    invoicesData.forEach(inv => { 
-        matchingHtml += `<div class="summary-row"><span>فاتورة: ${inv.customer} (${inv.serviceName})</span><span class="green-text">+${inv.total.toLocaleString()} د.ع</span></div><hr style="margin:5px 0;">`; 
-    });
-    receiptsData.forEach(rec => { 
-        matchingHtml += `<div class="summary-row"><span>سند قبض</span><span class="green-text">+${rec.amount.toLocaleString()} د.ع</span></div><hr style="margin:5px 0;">`; 
-    });
-    paymentsData.forEach(pay => { 
-        matchingHtml += `<div class="summary-row"><span>سند صرف: ${pay.name}</span><span class="orange-text">-${pay.amount.toLocaleString()} د.ع</span></div><hr style="margin:5px 0;">`; 
-    });
+    invoicesData.forEach(inv => { matchingHtml += `<div class="summary-row"><span>فاتورة: ${inv.customer} (${inv.serviceName})</span><span class="green-text">+${inv.total.toLocaleString()} د.ع</span></div><hr style="margin:5px 0;">`; });
+    receiptsData.forEach(rec => { matchingHtml += `<div class="summary-row"><span>سند قبض</span><span class="green-text">+${rec.amount.toLocaleString()} د.ع</span></div><hr style="margin:5px 0;">`; });
+    paymentsData.forEach(pay => { matchingHtml += `<div class="summary-row"><span>سند صرف: ${pay.name}</span><span class="orange-text">-${pay.amount.toLocaleString()} د.ع</span></div><hr style="margin:5px 0;">`; });
 
     const matchContainer = document.getElementById('matching-report-list');
     if(matchContainer) matchContainer.innerHTML = matchingHtml || '<p style="text-align:center; color:var(--text-gray);">لا توجد حركات مسجلة</p>';
-}
+};
 
-// دوال تعديل الفاتورة
-function editInvoice() {
+window.editInvoice = function() {
     document.getElementById('invoice-list-container').style.display = 'none';
     document.getElementById('edit-invoice-container').style.display = 'block';
-}
+};
 
-function cancelEditInvoice() {
+window.cancelEditInvoice = function() {
     document.getElementById('invoice-list-container').style.display = 'block';
     document.getElementById('edit-invoice-container').style.display = 'none';
-}
+};
 
-function saveInvoiceEdit() {
-    showNotification('تم حفظ التعديلات بنجاح!');
-    cancelEditInvoice();
-}
+window.saveInvoiceEdit = function() {
+    window.showNotification('تم حفظ التعديلات بنجاح!');
+    window.cancelEditInvoice();
+};
 
-// دالة حذف الفاتورة
-function deleteInvoice(btn) {
+window.deleteInvoice = function(btn) {
     Swal.fire({
         title: 'هل أنت متأكد؟',
         text: "لن تتمكن من استرجاع الفاتورة بعد الحذف!",
@@ -383,30 +393,13 @@ function deleteInvoice(btn) {
     }).then((result) => {
         if (result.isConfirmed) {
             const card = btn.closest('.invoice-card');
-            if (card) {
-                card.style.display = 'none';
-            }
-            Swal.fire({
-                title: 'تم الحذف!',
-                text: 'تم حذف الفاتورة بنجاح.',
-                icon: 'success',
-                confirmButtonColor: '#6b46c1'
-            });
+            if (card) { card.style.display = 'none'; }
+            Swal.fire({ title: 'تم الحذف!', text: 'تم حذف الفاتورة بنجاح.', icon: 'success', confirmButtonColor: '#6b46c1' });
         }
     });
-}
+};
 
-// عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('app-wrapper').style.display = 'block';
-    }
-
-    loadAllDataFromStorage();
-
-    renderServices();
-
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -421,34 +414,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if(fromDate) fromDate.value = `${yyyy}-${mm}-01`;
     if(toDate) toDate.value = formattedDate;
-
-    updateReports(); // تهيئة أرقام التقارير عند الفتح
 });
 
-// نظام التنبيهات
-function showNotification(message) {
-    Swal.fire({
-        text: message,
-        icon: 'success',
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        background: '#fff',
-        color: '#6b46c1',
-        iconColor: '#22c55e'
-    });
-}
+window.showNotification = function(message) {
+    Swal.fire({ text: message, icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true, background: '#fff', color: '#6b46c1', iconColor: '#22c55e' });
+};
 
-// دالة تصدير ملف الإكسل (CSV)
-function exportExcel() {
+window.exportExcel = function() {
     let csvContent = "\uFEFF"; 
     csvContent += "رقم الفاتورة,اسم الزبون,التاريخ,المبلغ\n";
     
-    invoicesData.forEach(inv => {
-        csvContent += `${inv.id},${inv.customer},${inv.date},${inv.total}\n`;
-    });
+    invoicesData.forEach(inv => { csvContent += `${inv.id},${inv.customer},${inv.date},${inv.total}\n`; });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
@@ -459,29 +435,13 @@ function exportExcel() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    window.showNotification('تم تحميل ملف الإكسل بنجاح!');
+};
 
-    showNotification('تم تحميل ملف الإكسل بنجاح!');
-}
+window.backupData = function() {
+    Swal.fire({ title: 'نسخة احتياطية', text: 'تم تجهيز النسخة الاحتياطية بنجاح!', icon: 'success', confirmButtonText: 'حفظ الملف', confirmButtonColor: '#6b46c1' });
+};
 
-function backupData() {
-    Swal.fire({
-        title: 'نسخة احتياطية',
-        text: 'تم تجهيز النسخة الاحتياطية بنجاح!',
-        icon: 'success',
-        confirmButtonText: 'حفظ الملف',
-        confirmButtonColor: '#6b46c1'
-    });
-}
-
-function restoreData() {
-    Swal.fire({
-        title: 'استعادة البيانات',
-        text: 'الرجاء اختيار ملف النسخة الاحتياطية.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'اختر ملف',
-        cancelButtonText: 'إلغاء',
-        confirmButtonColor: '#3b82f6',
-        cancelButtonColor: '#ef4444'
-    });
-}
+window.restoreData = function() {
+    Swal.fire({ title: 'استعادة البيانات', text: 'الرجاء اختيار ملف النسخة الاحتياطية.', icon: 'warning', showCancelButton: true, confirmButtonText: 'اختر ملف', cancelButtonText: 'إلغاء', confirmButtonColor: '#3b82f6', cancelButtonColor: '#ef4444' });
+};
