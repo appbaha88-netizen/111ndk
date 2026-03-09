@@ -19,18 +19,6 @@
             <button class="btn-primary mb-15" style="background-color: #db4437; color: white;" onclick="loginWithGoogle()">
                 <i class="fa-brands fa-google"></i> تسجيل الدخول بواسطة Google
             </button>
-            
-            <hr style="margin: 20px 0;">
-            
-            <h4 style="margin-bottom: 15px; color: var(--text-gray);">أو عبر رقم الهاتف</h4>
-            <div id="recaptcha-container"></div>
-            <input type="tel" id="phone-number" class="input-field" placeholder="رقم الهاتف (مثال: +964...)" style="text-align: left; direction: ltr;">
-            <button class="btn-primary mb-15" onclick="sendPhoneCode()">إرسال الكود</button>
-            
-            <div id="verification-section" style="display: none;">
-                <input type="text" id="verification-code" class="input-field" placeholder="أدخل الكود المرسل" style="text-align: center;">
-                <button class="btn-primary success" onclick="verifyPhoneCode()">تحقق وتسجيل الدخول</button>
-            </div>
         </div>
     </div>
 
