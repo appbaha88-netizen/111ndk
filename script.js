@@ -42,7 +42,7 @@ localStorage.setItem('app_paymentsData',JSON.stringify(paymentsData));
 
 
 // تسجيل الدخول
-function checkLogin(){
+window.checkLogin = function () {
 
 const pass = document.getElementById('login-pass').value;
 
