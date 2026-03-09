@@ -1,5 +1,5 @@
 // script.js
-import { db, auth, collection, getDocs, doc, setDoc, signInWithPhoneNumber, RecaptchaVerifier, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged } from './firebase.js';
+import { db, auth, collection, getDocs, doc, setDoc, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from './firebase.js';
 
 let servicesData = [
     { name: 'تصميم شعار', price: '25000', img: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80' },
@@ -10,56 +10,16 @@ let invoicesData = [];
 let receiptsData = [];
 let paymentsData = [];
 let currentSelectedServiceIndex = null;
-let confirmationResult = null;
 
 auth.languageCode = 'ar';
 
-window.setupRecaptcha = function() {
-    if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            'size': 'invisible'
-        });
-    }
-};
-
 window.loginWithGoogle = function() {
     const provider = new GoogleAuthProvider();
-    localStorage.setItem('loginMethod', 'google');
-    signInWithRedirect(auth, provider);
-};
-
-getRedirectResult(auth).then((result) => {
-    if (result) {
+    signInWithPopup(auth, provider).then((result) => {
         showApp();
-    }
-}).catch((error) => {
-    Swal.fire({text: 'فشل تسجيل الدخول: ' + error.message, icon: 'error', toast: true, position: 'top-end'});
-});
-
-window.sendPhoneCode = async function() {
-    const phone = document.getElementById('phone-number').value;
-    if (!phone) return;
-    window.setupRecaptcha();
-    const appVerifier = window.recaptchaVerifier;
-    try {
-        confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
-        document.getElementById('verification-section').style.display = 'block';
-        Swal.fire({text: 'تم إرسال الكود بنجاح', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000});
-    } catch (error) {
-        Swal.fire({text: 'حدث خطأ: ' + error.message, icon: 'error', toast: true, position: 'top-end'});
-    }
-};
-
-window.verifyPhoneCode = async function() {
-    const code = document.getElementById('verification-code').value;
-    if (!code) return;
-    try {
-        await confirmationResult.confirm(code);
-        localStorage.setItem('loginMethod', 'phone');
-        showApp();
-    } catch (error) {
-        Swal.fire({text: 'الكود غير صحيح', icon: 'error', toast: true, position: 'top-end'});
-    }
+    }).catch((error) => {
+        Swal.fire({text: 'فشل تسجيل الدخول: ' + error.message, icon: 'error', toast: true, position: 'top-end'});
+    });
 };
 
 function showApp() {
