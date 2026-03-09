@@ -359,6 +359,7 @@ timer:3000
 });
 
 }
+// ربط الدوال مع HTML
 window.switchTab = switchTab;
 window.switchReportTab = switchReportTab;
 window.addService = addService;
