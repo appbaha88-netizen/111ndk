@@ -353,3 +353,19 @@ timer:3000
 });
 
 }
+window.switchTab = switchTab;
+window.switchReportTab = switchReportTab;
+window.addService = addService;
+window.deleteService = deleteService;
+window.selectServiceToSell = selectServiceToSell;
+window.showSellGrid = showSellGrid;
+window.saveInvoice = saveInvoice;
+window.addReceipt = addReceipt;
+window.addPayment = addPayment;
+window.exportExcel = exportExcel;
+window.backupData = backupData;
+window.restoreData = restoreData;
+window.editInvoice = editInvoice;
+window.cancelEditInvoice = cancelEditInvoice;
+window.saveInvoiceEdit = saveInvoiceEdit;
+window.deleteInvoice = deleteInvoice;
