@@ -1,4 +1,4 @@
-
+import { db, collection, addDoc, getDocs } from "./firebase.js";
 // مصفوفة لتخزين الخدمات مع إضافة خدمات افتراضية وصور
 let servicesData = [
     { name: 'تصميم شعار', price: '25000', img: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80' },
