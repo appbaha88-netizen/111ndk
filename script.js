@@ -1,5 +1,5 @@
 // script.js
-import { db, auth, collection, getDocs, doc, setDoc, signInWithPhoneNumber, RecaptchaVerifier, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from './firebase.js';
+import { db, auth, collection, getDocs, doc, setDoc, signInWithPhoneNumber, RecaptchaVerifier, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged } from './firebase.js';
 
 let servicesData = [
     { name: 'تصميم شعار', price: '25000', img: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&q=80' },
@@ -22,16 +22,15 @@ window.setupRecaptcha = function() {
     }
 };
 
-window.loginWithGoogle = async function() {
+window.loginWithGoogle = function() {
     const provider = new GoogleAuthProvider();
-    try {
-        await signInWithPopup(auth, provider);
-        localStorage.setItem('loginMethod', 'google');
-        showApp();
-    } catch (error) {
-        Swal.fire({text: 'فشل تسجيل الدخول: ' + error.message, icon: 'error', toast: true, position: 'top-end'});
-    }
+    localStorage.setItem('loginMethod', 'google');
+    signInWithRedirect(auth, provider);
 };
+
+getRedirectResult(auth).catch((error) => {
+    Swal.fire({text: 'فشل تسجيل الدخول: ' + error.message, icon: 'error', toast: true, position: 'top-end'});
+});
 
 window.sendPhoneCode = async function() {
     const phone = document.getElementById('phone-number').value;
