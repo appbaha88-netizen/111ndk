@@ -242,10 +242,10 @@ hr { border: 0; border-top: 1px solid var(--border-color); margin: 20px 0; }
     padding: 30px;
     border-radius: 15px;
     text-align: center;
-   
-box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    /* إخفاء علامة reCAPTCHA */
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+/* إخفاء علامة reCAPTCHA */
 .grecaptcha-badge {
     visibility: hidden !important;
-}
 }
