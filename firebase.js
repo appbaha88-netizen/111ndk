@@ -1,17 +1,19 @@
+// firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithPhoneNumber, RecaptchaVerifier, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB-Jw_hWrN4fwrB6xMfAU1Xy3WtXQC-eSc",
-  authDomain: "baha-d6394.firebaseapp.com",
-  projectId: "baha-d6394",
-  storageBucket: "baha-d6394.firebasestorage.app",
-  messagingSenderId: "515596532130",
-  appId: "1:515596532130:web:d77243aaa3a825000d9afb",
-  measurementId: "G-5GS5X93N5P"
+  apiKey: "AIzaSyBp1XpwzR2-FlYBWgdA5oQLaFt8_f4uqFE",
+  authDomain: "jhjrtyr.firebaseapp.com",
+  projectId: "jhjrtyr",
+  storageBucket: "jhjrtyr.firebasestorage.app",
+  messagingSenderId: "197051242368",
+  appId: "1:197051242368:web:e34d0ab4e75b34214a1365"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
 
-export { db, collection, addDoc, getDocs };
+export { db, auth, collection, addDoc, getDocs, deleteDoc, doc, setDoc, signInWithPhoneNumber, RecaptchaVerifier, signInWithPopup, GoogleAuthProvider, onAuthStateChanged };
