@@ -33,7 +33,7 @@ function saveAllDataToStorage() {
 }
 
 // دالة التحقق من رمز الدخول (1001)
-function checkLogin() {
+window.checkLogin = function() {
     const pass = document.getElementById('login-pass').value;
     if (pass === '1001') {
         document.getElementById('login-overlay').style.display = 'none';
