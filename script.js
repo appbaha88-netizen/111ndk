@@ -214,7 +214,13 @@ total,
 date
 
 };
-
+addDoc(collection(db, "invoices"), {
+    customer: customer,
+    serviceName: srv.name,
+    qty: qty,
+    total: total,
+    date: date
+});
 invoicesData.push(invoice);
 
 saveAllDataToStorage();
