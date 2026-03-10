@@ -24,5 +24,24 @@
   "dir": "auto",
   "lang": "ar",
   "id": "b13.app",
-  "description": "B13 Management System"
+  "description": "B13 Management System",
+  "scope": "https://appbaha88-netizen.github.io/111ndk/",
+  "display_override": [
+    "browser",
+    "window-controls-overlay"
+  ],
+  "shortcuts": [
+    {
+      "name": "Games",
+      "url": "",
+      "description": ""
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://hb20072003@gmail.com",
+      "id": "gg_112532519316634287029"
+    }
+  ]
 }
