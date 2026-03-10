@@ -1,7 +1,7 @@
 {
   "name": "نظام الإدارة والتقارير",
   "short_name": "الإدارة",
-  "start_url": "https://appbaha88-netizen.github.io/111ndk/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6b46c1",
@@ -16,32 +16,6 @@
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
-    }
-  ],
-  "categories": [
-    "news"
-  ],
-  "dir": "auto",
-  "lang": "ar",
-  "id": "b13.app",
-  "description": "B13 Management System",
-  "scope": "https://appbaha88-netizen.github.io/111ndk/",
-  "display_override": [
-    "browser",
-    "window-controls-overlay"
-  ],
-  "shortcuts": [
-    {
-      "name": "Games",
-      "url": "",
-      "description": ""
-    }
-  ],
-  "related_applications": [
-    {
-      "platform": "webapp",
-      "url": "https://hb20072003@gmail.com",
-      "id": "gg_112532519316634287029"
     }
   ]
 }
