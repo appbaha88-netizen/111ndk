@@ -1,7 +1,7 @@
 {
   "name": "نظام الإدارة والتقارير",
   "short_name": "الإدارة",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6b46c1",
