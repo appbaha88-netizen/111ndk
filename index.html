@@ -257,11 +257,11 @@
         </nav>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="script.js"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                <script type="module" src="script.js"></script>;
+                navigator.serviceWorker.register('service-worker.js');
             });
         }
     </script>
