@@ -1,4 +1,4 @@
-const CACHE_NAME = "accounting-app-v1";
+const CACHE_NAME = "accounting-app-v2";
 
 const urlsToCache = [
   "./",
